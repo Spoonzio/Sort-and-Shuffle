@@ -126,7 +126,7 @@
      <item>
       <widget class="QLabel" name="lblBars">
        <property name="text">
-        <string>No. of bars</string>
+        <string>No. of bars:</string>
        </property>
       </widget>
      </item>
@@ -147,6 +147,41 @@
       <widget class="QPushButton" name="btn_Scramble">
        <property name="text">
         <string>Scramble</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QWidget" name="">
+    <property name="geometry">
+     <rect>
+      <x>220</x>
+      <y>540</y>
+      <width>371</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <widget class="QLabel" name="lblAnim">
+       <property name="text">
+        <string>Animation Speed:    </string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSlider" name="sldAnim_speed">
+       <property name="minimum">
+        <number>1</number>
+       </property>
+       <property name="singleStep">
+        <number>10</number>
+       </property>
+       <property name="value">
+        <number>50</number>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
        </property>
       </widget>
      </item>
