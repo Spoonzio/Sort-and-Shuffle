@@ -14,14 +14,13 @@ class MatplotlibWidget(QMainWindow):
     # Declare class var
     xdata = None
     ydata = None
-    t = 0.01
 
     def __init__(self):
         # Constructor
         QMainWindow.__init__(self)
 
         # Read UI
-        loadUi("C:\workspace\Sort-and-Shuffle\Final\qt_designer.ui",self)
+        loadUi("qt_designer.ui",self)
         
         # self.setWindowIcon("icon.png")
         self.initial_graph()
@@ -29,9 +28,9 @@ class MatplotlibWidget(QMainWindow):
 
         # Connect methods to buttons :
         self.btn_Bubble.clicked.connect(self.bubble_sort)
-        # self.btn_Insertion.clicked.connect()
-        # self.btn_Merge.clicked.connect()
-        # self.btn_Quick.clicked.connect()
+        self.btn_Insertion.clicked.connect(self.insert_sort)
+        # self.btn_Merge.clicked.connect(self.merge_sort)
+        # self.btn_Selection.clicked.connect(self.select_sort)
 
         # Update Graph when spin-box is changed
         self.spnBars.valueChanged.connect(self.update_new_graph)
@@ -117,26 +116,69 @@ class MatplotlibWidget(QMainWindow):
                         # Update class var
                         self.ydata = yarray
 
-                        # Sleep to create a more pleasing animation
-                        # time.sleep(0.001)
-                        self.MplWidget.canvas.axes.clear()
+                        # Call to update graph
+                        self.new_frame(j+1)
 
-                        # Create colour list to indicate which bar is highlighted
-                        bar_color = ["#00A7E1"] * (len(yarray)-1)
-                        bar_color.insert(j+1,"#ffa500")
-                        self.draw_graph(self.xdata, self.ydata, bar_color)
 
-                        # Process pending envents for the MPL graph
-                        QtCore.QCoreApplication.processEvents()
-                    else:
-                        # Pass if 2 comparing data is in ascending order
-                        pass
+    def insert_sort(self):
+        # Get class variable
+        yarray = self.ydata
+
+        # Loop through list
+        for i in range(len(yarray)):
+
+            if (i+1) == len(yarray):
+                # Prevent reading out of list
+                break 
+            else:
+                # If pair not in ascending order
+                if yarray[i] > yarray[i+1]:
+                    # Using Swaping method for better animation / demostration. Delete and insert method is commented
+
+                    # # Delete and Insert method---------------------------------------------
+                    # temp = yarray[i+1]
+                    # del yarray[i+1]       
+
+                    # for j in range(i+1):
+                    #     if yarray[j] > temp:
+                    #         # Find first elem that is bigger than Temp, insert at that position, shift the rest down
+                    #         index = j
+                    #         yarray.insert(index, temp)
+                    #         self.new_frame(j)
+                    #         break               
                     
-                               
+                    # Swap method -----------------------------------------------------------
+                    # Find the right place for the elem, from beginning till current spot in list
+                    for k in reversed(range(i+1)):
+                        if yarray[k+1] < yarray[k]:
+                            yarray[k], yarray[k+1] = yarray[k+1] , yarray[k]
+                            self.new_frame(k)
+                        else:
+                            break
+         
+
+    def new_frame(self, highlight_bar):
+         
+        # Sleep to create a more pleasing animation
+        time.sleep(self.ani_time())
+        self.MplWidget.canvas.axes.clear()
+
+        # Create colour list to indicate which bar is highlighted
+        bar_color = ["#00A7E1"] * (len(self.ydata)-1)
+        bar_color.insert(highlight_bar,"#ffa500")
+        self.draw_graph(self.xdata, self.ydata, bar_color)
+
+        # Process pending envents for the MPL graph
+        QtCore.QCoreApplication.processEvents()
+
+
     def ani_time(self):
         # Determine sort wait time scaled to bars amount
-        if self.ydata:
-            return 1/(2*len(self.ydata))
+        ani_speed = self.sldAnim_speed.value()
+
+        # Linear formula that determine the sleep time from the slider value
+        ani_interval = (-1/295)*ani_speed + 0.336
+        return(ani_interval)
 
 
 app = QApplication([])
