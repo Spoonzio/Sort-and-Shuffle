@@ -14,6 +14,7 @@ class MatplotlibWidget(QMainWindow):
     # Declare class var
     xdata = None
     ydata = None
+    loop_state = False
 
     def __init__(self):
         # Constructor
@@ -29,15 +30,40 @@ class MatplotlibWidget(QMainWindow):
         # Connect methods to buttons :
         self.btn_Bubble.clicked.connect(self.bubble_sort)
         self.btn_Insertion.clicked.connect(self.insert_sort)
-        # self.btn_Merge.clicked.connect(self.merge_sort)
-        # self.btn_Selection.clicked.connect(self.select_sort)
+        self.btn_Merge.clicked.connect(self.merge_sort)
+        self.btn_Selection.clicked.connect(self.select_sort)
 
         # Update Graph when spin-box is changed
         self.spnBars.valueChanged.connect(self.update_new_graph)
 
         # Call scramble method when clicked
         self.btn_Scramble.clicked.connect(self.scramble_bars)
+    
+    
+    def new_frame(self, highlight_bar):
+         
+        # Sleep to create a more pleasing animation
+        time.sleep(self.ani_time())
+        self.MplWidget.canvas.axes.clear()
 
+        # Create colour list to indicate which bar is highlighted
+        bar_color = ["#00A7E1"] * (len(self.ydata)-1)
+        bar_color.insert(highlight_bar,"#ffa500")
+        self.draw_graph(self.xdata, self.ydata, bar_color)
+
+        # Process pending envents for the MPL graph
+        QtCore.QCoreApplication.processEvents()
+
+
+    def ani_time(self):
+        # Determine sort wait time scaled to bars amount
+        ani_speed = self.sldAnim_speed.value()
+
+        # Linear formula that determine the sleep time from the slider value
+        ani_interval = (-1/295)*ani_speed + 0.336
+        return(ani_interval)
+    
+    
     def scramble_bars(self):
         # Scramble bars in canvas
         self.MplWidget.canvas.axes.clear()
@@ -89,15 +115,27 @@ class MatplotlibWidget(QMainWindow):
             # Color parameter will highlight selected bar (Bar that is being moved)
             self.MplWidget.canvas.axes.bar(xs, ys, color = bar_color)
 
-        self.MplWidget.canvas.draw()
+        self.MplWidget.canvas.draw()      
 
+
+    def buttons(self, tfstate):
+        self.btn_Bubble.setEnabled(tfstate)
+        self.btn_Insertion.setEnabled(tfstate)
+        self.btn_Merge.setEnabled(tfstate)
+        self.btn_Selection.setEnabled(tfstate)
+        self.btn_Scramble.setEnabled(tfstate)
+    
 
     def bubble_sort(self):
         # Copy dataset
-        yarray = self.ydata
+        yarray = self.ydata.copy()
+
+        # Disable buttons
+        self.buttons(False)
 
         # Loop through all elements
         for i in range(len(yarray)):
+
             # Determine new endpoint as last i elements will be sorted (efficientcy)
             endp = len(yarray) - i
             
@@ -119,10 +157,15 @@ class MatplotlibWidget(QMainWindow):
                         # Call to update graph
                         self.new_frame(j+1)
 
+        self.buttons(True)
+
 
     def insert_sort(self):
         # Get class variable
-        yarray = self.ydata
+        yarray = self.ydata.copy()
+
+        # Disable buttons
+        self.buttons(False)
 
         # Loop through list
         for i in range(len(yarray)):
@@ -136,11 +179,12 @@ class MatplotlibWidget(QMainWindow):
                     # Using Swaping method for better animation / demostration. Delete and insert method is commented
 
                     # # Delete and Insert method---------------------------------------------
-                    # temp = yarray[i+1]
-                    # del yarray[i+1]       
+                    # # Read and remove
+                    # temp = yarra.pop(i+1) 
 
                     # for j in range(i+1):
                     #     if yarray[j] > temp:
+                    # 
                     #         # Find first elem that is bigger than Temp, insert at that position, shift the rest down
                     #         index = j
                     #         yarray.insert(index, temp)
@@ -152,34 +196,64 @@ class MatplotlibWidget(QMainWindow):
                     for k in reversed(range(i+1)):
                         if yarray[k+1] < yarray[k]:
                             yarray[k], yarray[k+1] = yarray[k+1] , yarray[k]
+
+                            # Update class var
+                            self.ydata = yarray
+
+                            # Update graph
                             self.new_frame(k)
                         else:
                             break
+
+        self.buttons(True)
          
 
-    def new_frame(self, highlight_bar):
-         
-        # Sleep to create a more pleasing animation
-        time.sleep(self.ani_time())
-        self.MplWidget.canvas.axes.clear()
+    def merge_sort(self):
+        # Get class variable
+        yarray = self.ydata.copy()
 
-        # Create colour list to indicate which bar is highlighted
-        bar_color = ["#00A7E1"] * (len(self.ydata)-1)
-        bar_color.insert(highlight_bar,"#ffa500")
-        self.draw_graph(self.xdata, self.ydata, bar_color)
+        # Disable buttons
+        self.disable_btn()
 
-        # Process pending envents for the MPL graph
-        QtCore.QCoreApplication.processEvents()
+    
+    def select_sort(self):
+        # Get class variable
+        yarray = self.ydata.copy()
 
+        # Disable buttons
+        self.buttons(False)
 
-    def ani_time(self):
-        # Determine sort wait time scaled to bars amount
-        ani_speed = self.sldAnim_speed.value()
+        # Loop through list
+        for i in range(len(yarray)):
 
-        # Linear formula that determine the sleep time from the slider value
-        ani_interval = (-1/295)*ani_speed + 0.336
-        return(ani_interval)
+            #Place holder for smallest number in sublist
+            holder = None
 
+            # Iterate over unsorted sublist
+            for j in range(i,len(yarray)):
+                
+                if (not holder):
+                    holder = yarray[j]
+                elif yarray[j] < holder:
+                    holder = yarray[j]
+
+                # Show iteration
+                self.new_frame(j)
+            
+
+            # Read and insert lowest bar into sorted part
+            shifter_index = yarray.index(holder)
+            yarray.pop(shifter_index)
+            yarray.insert(i, holder)
+
+            # Update class var & graph
+            self.ydata = yarray
+
+            # Update graph
+            self.new_frame(shifter_index)
+
+        self.buttons(True)
+        
 
 app = QApplication([])
 window = MatplotlibWidget()
