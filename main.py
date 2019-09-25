@@ -1,14 +1,13 @@
-from PyQt5.QtWidgets import *
-from PyQt5 import QtCore
-from PyQt5.uic import loadUi
 import random
 import time
 
-from matplotlib.backends.backend_qt5agg import (NavigationToolbar2QT as NavigationToolbar)
+from matplotlib.backends.backend_qt5agg import \
+    NavigationToolbar2QT as NavigationToolbar
+from PyQt5 import QtCore, QtGui
+from PyQt5.QtWidgets import *
+from PyQt5.uic import loadUi
 
-import numpy as np
-import random
-     
+
 class MatplotlibWidget(QMainWindow):
 
     # Declare class var
@@ -23,9 +22,10 @@ class MatplotlibWidget(QMainWindow):
         # Read UI
         loadUi("qt_designer.ui",self)
         
-        # self.setWindowIcon("icon.png")
+        self.setWindowIcon(QtGui.QIcon("icon.png"))
         self.initial_graph()
         self.MplWidget.canvas.axes.get_xaxis().set_visible(False)
+        self.MplWidget.canvas.axes.get_yaxis().set_visible(False)
 
         # Connect methods to buttons :
         self.btn_Bubble.clicked.connect(self.bubble_sort)
@@ -209,12 +209,84 @@ class MatplotlibWidget(QMainWindow):
          
 
     def merge_sort(self):
-        # Get class variable
+        # Copy dataset
         yarray = self.ydata.copy()
 
         # Disable buttons
-        self.disable_btn()
+        self.buttons(False)
 
+        yarray = self.merge_split(yarray)
+
+        # Update class var
+        self.ydata = yarray
+        self.new_frame(0)
+        
+        self.buttons(True)
+
+
+    def merge_split(self, arr):
+        length = len(arr)
+
+        # Return, end of recursion
+        if length == 1:
+            return(arr)
+        
+        midp = length//2
+
+        # Call self to split until return single element, update class var
+        arr_1 = self.merge_split(arr[:midp])
+        self.merge_update(arr_1, self.ydata)
+        arr_2 = self.merge_split(arr[midp:])
+        self.merge_update(arr_2, self.ydata)
+        
+        self.new_frame(0)
+
+        # Call merge to sort half lists
+        return(self.merge(arr_1, arr_2))
+
+
+    def merge_update(self, sub_list, main_list):
+        
+        # Get index of the sorted elements in the main list
+        pos = []
+        for value in sub_list:
+            pos.append(main_list.index(value))
+
+        # Remove elem from main list
+        for v in sub_list:
+            main_list.remove(v)
+        
+        # Find range
+        high = max(pos)
+        low = min(pos)
+
+        # Insert same elements back to main list, from sorted list (in order)
+        for i in range(low, high+1):
+            main_list.insert(i, sub_list[i-low])
+
+        
+    def merge(self, arr_1, arr_2):
+        sorted_arr = []
+
+        # Use append and pop, given already sorted lists 
+        while arr_1 and arr_2:
+            
+            if arr_1[0] < arr_2[0]:
+                # arr1[0] smaller
+                sorted_arr.append(arr_1.pop(0))
+            else:
+                # arr2[0] smaller
+                sorted_arr.append(arr_2.pop(0))
+
+        # Append from sorted sublist, as one of the sub-list will be empty
+        while arr_1:
+            sorted_arr.append(arr_1.pop(0))
+
+        while arr_2:
+            sorted_arr.append(arr_2.pop(0))
+
+        return(sorted_arr)
+        
     
     def select_sort(self):
         # Get class variable
